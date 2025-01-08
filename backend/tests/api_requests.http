@@ -1,0 +1,105 @@
+### Environment Variables
+@baseUrl = http://localhost:3000/api
+@contentType = application/json
+
+### Seed the database with initial data
+GET {{baseUrl}}/seed HTTP/1.1
+Content-Type: {{contentType}}
+
+### Stats the database with initial data
+GET {{baseUrl}}/stats HTTP/1.1
+Content-Type: {{contentType}}
+
+### Key Endpoints
+
+#### Create a new key
+POST {{baseUrl}}/keys HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "value": "master-key-123",
+  "room": "201"
+}
+
+#### Get all keys
+GET {{baseUrl}}/keys HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Get a key by ID
+GET {{baseUrl}}/keys/4 HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Update a key by ID
+PUT {{baseUrl}}/keys/4 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "value": "updated-master-key-123"
+}
+
+#### Delete a key by ID
+DELETE {{baseUrl}}/keys/4 HTTP/1.1
+Content-Type: {{contentType}}
+
+### Copy Endpoints
+
+#### Create a new key copy
+POST {{baseUrl}}/copies HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "key_id": 1,
+  "status": "Available",
+  "staff_id": 1
+}
+
+#### Get all key copies
+GET {{baseUrl}}/copies HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Get a key copy by ID
+GET {{baseUrl}}/copies/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Update a key copy by ID
+PUT {{baseUrl}}/copies/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "status": "inactive"
+}
+
+#### Delete a key copy by ID
+DELETE {{baseUrl}}/copies/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+### Staff Endpoints
+
+#### Create a new staff member
+POST {{baseUrl}}/staff HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "role": "admin",
+  "status": "active"
+}
+
+#### Get all staff members
+GET {{baseUrl}}/staff HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Get a staff member by ID
+GET {{baseUrl}}/staff/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+#### Update a staff member by ID
+PUT {{baseUrl}}/staff/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "status": "inactive"
+}
+
+#### Delete a staff member by ID
+DELETE {{baseUrl}}/staff/3 HTTP/1.1
+Content-Type: {{contentType}}
