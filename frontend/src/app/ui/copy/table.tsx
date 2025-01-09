@@ -2,9 +2,14 @@
 import { useEffect, useState } from 'react';
 import { Dialog } from '../dialog';
 import Button from '../button';
+import fetchData from '@/app/lib/fetch';
 
-export default function CopiesTable() {
-    const [copies, setCopies] = useState<any[]>([]);
+export default function CopiesTable(props: {
+    data: any[]
+    total: number
+    page: number
+}) {
+    const [copies, setCopies] = useState<any[]>(props.data);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false); // State for create dialog
@@ -57,28 +62,7 @@ export default function CopiesTable() {
         if (!response.ok) {
             throw new Error("Failed to delete copy");
         }
-        setCopies(copies.filter((copy) => copy.id !== id));
-    };
-
-    // Fetch Copies with Search and Pagination
-    const fetchCopies = async () => {
-        try {
-            const response = await fetch(
-                `${url}?page=${currentPage}&limit=${limit}&status=${searchQuery}`
-            );
-            if (!response.ok) {
-                throw new Error("Failed to fetch copies");
-            }
-            const res: any = await response.json();
-            setCopies(res.data); // Set the table data
-
-            // Calculate total pages
-            const totalItems = res.total; // Total number of items
-            const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
-            setTotalPages(totalPages); // Set the total number of pages
-        } catch (error) {
-            console.error("Error fetching copies:", error);
-        }
+        setCopies(copies.filter((copy) => copy.ID !== id));
     };
 
     // Handle Search Input Change
@@ -87,16 +71,28 @@ export default function CopiesTable() {
         setCurrentPage(1); // Reset to the first page when searching
     };
 
-    // Handle Pagination
-    const handleNextPage = () => {
+    useEffect(() => {
+        const totalItems = props.total;
+        const t = Math.ceil(totalItems / limit);
+        setTotalPages(t)
+        setCopies(copies)
+    }, [copies, currentPage])
+
+    const handleNextPage = async () => {
         if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+            const page = currentPage + 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setCopies(x.data)
         }
     };
 
-    const handlePreviousPage = () => {
+    const handlePreviousPage = async () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            const page = currentPage - 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setCopies(x.data)
         }
     };
 
@@ -157,11 +153,6 @@ export default function CopiesTable() {
             setNewCopy({ ...newCopy, [name]: value }); // Update the newCopy state
         }
     };
-
-    // Fetch data when searchQuery, currentPage, or copies change
-    useEffect(() => {
-        fetchCopies();
-    }, [copies]);
 
     return (
         <div className='flex flex-col gap-y-3'>

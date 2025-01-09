@@ -2,9 +2,14 @@
 import { useEffect, useState } from 'react';
 import { Dialog } from '../dialog';
 import Button from '../button';
+import fetchData from '@/app/lib/fetch';
 
-export default function KeysTable() {
-    const [keys, setKeys] = useState<any[]>([]);
+export default function KeysTable(props: {
+    data: any[]
+    total: number
+    page: number
+}) {
+    const [keys, setKeys] = useState<any[]>(props.data);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false); // State for create dialog
@@ -57,28 +62,7 @@ export default function KeysTable() {
         if (!response.ok) {
             throw new Error("Failed to delete key");
         }
-        setKeys(keys.filter((key) => key.id !== id));
-    };
-
-    // Fetch Keys with Search and Pagination
-    const fetchKeys = async () => {
-        try {
-            const response = await fetch(
-                `${url}?page=${currentPage}&limit=${limit}&value=${searchQuery}`
-            );
-            if (!response.ok) {
-                throw new Error("Failed to fetch keys");
-            }
-            const res: any = await response.json();
-            setKeys(res.data); // Set the table data
-
-            // Calculate total pages
-            const totalItems = res.total; // Total number of items
-            const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
-            setTotalPages(totalPages); // Set the total number of pages
-        } catch (error) {
-            console.error("Error fetching keys:", error);
-        }
+        setKeys(keys.filter((key) => key.ID !== id));
     };
 
     // Handle Search Input Change
@@ -87,16 +71,28 @@ export default function KeysTable() {
         setCurrentPage(1); // Reset to the first page when searching
     };
 
-    // Handle Pagination
-    const handleNextPage = () => {
+    useEffect(() => {
+        const totalItems = props.total;
+        const t = Math.ceil(totalItems / limit);
+        setTotalPages(t)
+        setKeys(keys)
+    }, [keys, currentPage])
+
+    const handleNextPage = async () => {
         if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+            const page = currentPage + 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setKeys(x.data)
         }
     };
 
-    const handlePreviousPage = () => {
+    const handlePreviousPage = async () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            const page = currentPage - 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setKeys(x.data)
         }
     };
 
@@ -114,9 +110,8 @@ export default function KeysTable() {
             if (!response.ok) {
                 throw new Error("Failed to update key");
             }
-            // Update the table data
             setKeys(keys.map((key) => (key.ID === editKey.ID ? editKey : key)));
-            handleCloseEditDialog(); // Close the edit dialog
+            handleCloseEditDialog();
         } catch (error) {
             console.error("Error updating key:", error);
         }
@@ -153,11 +148,6 @@ export default function KeysTable() {
             setNewKey({ ...newKey, [name]: value }); // Update the newKey state
         }
     };
-
-    // Fetch data when searchQuery, currentPage, or keys change
-    useEffect(() => {
-        fetchKeys();
-    }, [keys, searchQuery, currentPage]);
 
     return (
         <div className='flex flex-col gap-y-3'>
