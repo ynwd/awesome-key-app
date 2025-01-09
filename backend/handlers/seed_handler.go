@@ -47,6 +47,15 @@ func (h *SeedHandler) SeedData(c *fiber.Ctx) error {
 		{Role: "Admin", Status: "Active"},
 		{Role: "Editor", Status: "Active"},
 		{Role: "Viewer", Status: "Inactive"},
+		{Role: "HRD", Status: "Active"},
+		{Role: "Driver", Status: "Active"},
+		{Role: "Finance", Status: "Inactive"},
+		{Role: "CEO", Status: "Active"},
+		{Role: "COO", Status: "Active"},
+		{Role: "CFO", Status: "Inactive"},
+		{Role: "Driver", Status: "Active"},
+		{Role: "Chef", Status: "Active"},
+		{Role: "Writer", Status: "Inactive"},
 	}
 	for _, staff := range staffMembers {
 		if err := h.staffService.CreateStaff(&staff); err != nil {

@@ -1,10 +1,23 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog } from '../dialog';
 import Button from '../button';
+import fetchData from '@/app/lib/fetch';
 
-export default function StaffTable() {
-    const [d, setD] = useState<any[]>([]);
+type Staff = {
+    ID: number,
+    role: string,
+    status: string
+}
+
+export default function StaffTable(props: {
+    data: Staff[]
+    total: number
+    page: number
+}) {
+
+    const [d, setD] = useState<Staff[]>(props.data);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false); // State for create dialog
@@ -12,26 +25,33 @@ export default function StaffTable() {
     const [editStaff, setEditStaff] = useState<any>(null); // Track row data being edited
     const [newStaff, setNewStaff] = useState<any>({ role: '', status: '' }); // Track new staff data
     const [searchQuery, setSearchQuery] = useState(''); // Track search query
-    const [currentPage, setCurrentPage] = useState(1); // Track current page
+    const [currentPage, setCurrentPage] = useState(props.page); // Track current page
     const [totalPages, setTotalPages] = useState(1); // Track total pages
     const limit = 10; // Number of items per page
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/staff`;
 
+    useEffect(() => {
+        const totalItems = props.total;
+        const t = Math.ceil(totalItems / limit);
+        setTotalPages(t)
+        setD(d)
+    }, [d, currentPage])
+
     // View Dialog Handlers
     const handleOpenViewDialog = (staff: any) => {
-        setSelectedStaff(staff); // Set the selected row data
-        setIsViewDialogOpen(true); // Open the view dialog
+        setSelectedStaff(staff);
+        setIsViewDialogOpen(true);
     };
 
     const handleCloseViewDialog = () => {
         setIsViewDialogOpen(false);
-        setSelectedStaff(null); // Clear the selected row data
+        setSelectedStaff(null);
     };
 
     // Edit Dialog Handlers
     const handleOpenEditDialog = (staff: any) => {
-        setEditStaff({ ...staff }); // Set the row data being edited (create a copy)
-        setIsEditDialogOpen(true); // Open the edit dialog
+        setEditStaff({ ...staff });
+        setIsEditDialogOpen(true);
     };
 
     const handleCloseEditDialog = () => {
@@ -57,7 +77,7 @@ export default function StaffTable() {
         if (!response.ok) {
             throw new Error("Failed to delete key");
         }
-        setD(d.filter((key) => key.id !== id));
+        setD(d.filter((key) => key.ID !== id));
     };
 
     // Handle Search Input Change
@@ -66,16 +86,22 @@ export default function StaffTable() {
         setCurrentPage(1); // Reset to the first page when searching
     };
 
-    // Handle Pagination
-    const handleNextPage = () => {
+
+    const handleNextPage = async () => {
         if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+            const page = currentPage + 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setD(x.data)
         }
     };
 
-    const handlePreviousPage = () => {
+    const handlePreviousPage = async () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            const page = currentPage - 1
+            setCurrentPage(page);
+            const x = await fetchData(url, page, limit, searchQuery)
+            setD(x.data)
         }
     };
 
@@ -132,33 +158,6 @@ export default function StaffTable() {
             setNewStaff({ ...newStaff, [name]: value }); // Update the newStaff state
         }
     };
-
-
-    // Fetch Staff Data with Search and Pagination
-    const fetchStaff = async () => {
-        try {
-            const response = await fetch(
-                `${url}?page=${currentPage}&limit=${limit}&role=${searchQuery}`
-            );
-            if (!response.ok) {
-                throw new Error("Failed to fetch keys");
-            }
-            const res: any = await response.json();
-            setD(res.data); // Set the table data
-
-            // Calculate total pages
-            const totalItems = res.total; // Total number of items
-            const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
-            setTotalPages(totalPages); // Set the total number of pages
-        } catch (error) {
-            console.error("Error fetching keys:", error);
-        }
-    };
-
-    // Fetch data when searchQuery, currentPage, or d changes
-    useEffect(() => {
-        fetchStaff();
-    }, [d, limit, searchQuery, currentPage]);
 
     return (
         <div className='flex flex-col gap-y-3'>
